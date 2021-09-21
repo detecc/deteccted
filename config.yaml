@@ -1,0 +1,8 @@
+client:
+  host: localhost
+  port: 7777
+  authPassword: yourPassword
+  pingInterval: 60
+  pluginDir: ./plugin-list
+  plugins:
+    - "sn-client-example-plugin"
