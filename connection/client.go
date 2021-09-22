@@ -7,9 +7,11 @@ import (
 	"github.com/detecc/deteccted/config"
 	"github.com/detecc/deteccted/plugin"
 	"github.com/detecc/detecctor/shared"
+	"io"
 	"log"
 	"net"
 	"sync"
+	"time"
 )
 
 type Client struct {
@@ -23,7 +25,8 @@ func Start() {
 	}
 	go client.listenForIncomingMessages()
 
-	plugin.LoadPlugins()
+	plugin.GetPluginManager().LoadPlugins()
+
 	conf := config.GetClientConfiguration()
 	// send the auth request
 	once := sync.Once{}
@@ -40,13 +43,33 @@ func Start() {
 }
 
 func (c *Client) listenForIncomingMessages() {
+	conf := config.GetClientConfiguration().Client
 	defer c.conn.Close()
 	for {
+		if !c.isConnectionAlive() {
+			//try to reconnect
+			log.Println("Connection is down, reconnecting...")
+			c.conn = dial(conf.Host, conf.Port)
+			time.Sleep(1 * time.Second)
+			continue
+		}
 		message, _ := bufio.NewReader(c.conn).ReadString('\n')
 		if message != "" {
 			c.handleMessage(message)
 		}
 	}
+}
+// isConnectionAlive Checks if the connection is alive.
+func (c *Client) isConnectionAlive() bool {
+	one := make([]byte, 1)
+	err := c.conn.SetReadDeadline(time.Now().Add(20 * time.Millisecond))
+	if err != nil {
+		return false
+	}
+	if _, err := c.conn.Read(one); err == io.EOF {
+		return false
+	}
+	return true
 }
 
 // handleMessage processes the message and executes corresponding plugin

@@ -1,8 +1,8 @@
+serviceNodeIdentifier: a7309be127cf7g9127309
 client:
   host: localhost
   port: 7777
   authPassword: yourPassword
-  pingInterval: 60
-  pluginDir: ./plugin-list
+  pluginDir: ../detecc-cpu/client/
   plugins:
-    - "sn-client-example-plugin"
+    - "client"
