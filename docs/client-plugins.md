@@ -1,6 +1,8 @@
 # Client plugins
 
-Client plugins must implement the `Handler` interface defined in the `plugin` package.
+Client plugins must implement the `Handler` interface defined in the `plugin` package. The plugin should be registered
+to the `PluginManager` in the `init` function by calling the `GetPluginManager().Register(commandName, plugin)`
+or `Register(commandName, plugin)`.
 
 ## Plugin interface
 

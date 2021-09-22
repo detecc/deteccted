@@ -1,27 +1,29 @@
 # Deteccted
 
-## About
-
-Deteccted is the client for **detecctor**. It should be installed on the same server where the _service nodes_ run. It will
-periodically ping the server with the status of the service node. The client also supports plugins which are bound to
-the plugins and commands on the server.
+Deteccted is a customizable, plugin-based🔌 client for the ⚡[**Detecctor**](https://github.com/detecc/detecctor).
 
 ## Configuration
 
+An example configuration file for the client:
+
 ```yaml
+serviceNodeIdentifier: "yourServiceNodeId"
 client:
-  server:
-    host: localhost
-    port: 7777
-pingInterval: 60
-pluginDir: "/usr/deteccted/plugins"
-plugins:
-  - "examplePlugin"
+  host: localhost
+  port: 7777
+  authPassword: yourPassword
+  pluginDir: "/usr/deteccted/plugins"
+  plugins:
+    - "examplePlugin"
 ```
+
+## Plugins
+
+Check out the [plugin docs](docs/client-plugins.md) on how to create and compile plugins for **Deteccted**.
 
 ## Running the client
 
-## Docker
+## Using Docker
 
 ```bash
 todo  
@@ -30,6 +32,6 @@ todo
 ## Standalone
 
 ```bash
-go build . 
-./main #--help
+go build . -o deteccted
+./deteccted #--help for all the available flags
 ```
