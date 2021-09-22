@@ -3,12 +3,12 @@ package connection
 import (
 	"bufio"
 	"fmt"
-	"log"
-	"net"
-	"github.com/detecc/detecctor/shared"
 	"github.com/detecc/deteccted/cache"
 	"github.com/detecc/deteccted/config"
 	"github.com/detecc/deteccted/plugin"
+	"github.com/detecc/detecctor/shared"
+	"log"
+	"net"
 	"sync"
 )
 
@@ -24,13 +24,14 @@ func Start() {
 	go client.listenForIncomingMessages()
 
 	plugin.LoadPlugins()
+	conf := config.GetClientConfiguration()
 	// send the auth request
 	once := sync.Once{}
 	once.Do(func() {
 		client.sendMessage(&shared.Payload{
 			Id:             "1",
-			ServiceNodeKey: "a7309be127cf7g9127309",
-			Data:           config.GetClientConfiguration().Client.AuthPassword,
+			ServiceNodeKey: conf.ServiceNodeIdentifier,
+			Data:           conf.Client.AuthPassword,
 			Command:        "/auth",
 			Success:        true,
 			Error:          "",
