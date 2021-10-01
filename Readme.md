@@ -25,13 +25,21 @@ Check out the [plugin docs](docs/client-plugins.md) on how to create and compile
 
 ## Using Docker
 
+Build the Deteccted image:
+
 ```bash
-todo  
+docker build --build-arg PLUGIN_DIR=/path/to/plugins --target=app -t deteccted . 
+```
+
+Run the Deteccted container:
+
+```bash
+docker run -v ./config.yaml:/deteccted/src/config.yaml deteccted 
 ```
 
 ## Standalone
 
 ```bash
-go build . -o deteccted
+go build -o deteccted . 
 ./deteccted #--help for all the available flags
 ```
