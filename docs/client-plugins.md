@@ -11,8 +11,14 @@ type Handler interface {
 // Execute method is called when a client receives a command from the server. As an argument, it gets the data from the Payload sent from the server. 
 // The execute method returns the data, which is inserted into the Payload and sent to the server as a reply to the command.
 Execute(args interface{}) (interface{}, error)
+
+// GetMetadata returns the metadata of the client plugin.
+GetMetadata() Metadata
 }
 ```
+
+If you want or need to send a message in a plugin without prior request, there is a `connection.SendToServer(payload)`
+method that allows you to do so. The only argument is a `Payload` object.
 
 ## Plugin example
 
