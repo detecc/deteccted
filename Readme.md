@@ -1,8 +1,8 @@
-# Deteccted
+# 🎯 Deteccted 
 
-Deteccted is a customizable, plugin-based🔌 client for the ⚡[**Detecctor**](https://github.com/detecc/detecctor).
+Deteccted is a customizable, 🔌 plugin-based client for the ⚡[**Detecctor**](https://github.com/detecc/detecctor).
 
-## Configuration
+## ⚙ Configuration
 
 An example configuration file for the client:
 
@@ -17,13 +17,13 @@ client:
     - "examplePlugin"
 ```
 
-## Plugins
+## 🔌 Plugins
 
 Check out the [plugin docs](docs/client-plugins.md) on how to create and compile plugins for **Deteccted**.
 
-## Running the client
+## 🏃 Running the client
 
-## Using Docker
+## Using 🐳 Docker
 
 Build the Deteccted image:
 

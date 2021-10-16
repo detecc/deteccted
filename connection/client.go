@@ -35,21 +35,30 @@ func Start() {
 		go client.listenForIncomingMessages()
 
 		// send the auth request
-		client.sendMessage(&shared.Payload{
-			Id:             "",
-			ServiceNodeKey: conf.ServiceNodeIdentifier,
-			Data:           conf.Client.AuthPassword,
-			Command:        "/auth",
-			Success:        true,
-			Error:          "",
-		})
+		payload := shared.NewPayload(
+			shared.ForClient(conf.ServiceNodeIdentifier),
+			shared.WithData(conf.Client.AuthPassword),
+			shared.ForCommand("/auth"),
+			shared.Successful(),
+		)
+		client.sendMessage(&payload)
 	})
+}
+
+// SendPayloadToServer sends a payload to the server if the client exists and is connected.
+//It is just an exposure to the plugins that want to periodically transmit data without prior request.
+func SendPayloadToServer(payload shared.Payload) error {
+	if client != nil {
+		return client.sendMessage(&payload)
+	}
+	return fmt.Errorf("client not initialized")
 }
 
 // SendToServer sends a payload to the server if the client exists and is connected.
 //It is just an exposure to the plugins that want to periodically transmit data without prior request.
-func SendToServer(payload shared.Payload) error {
+func SendToServer(opts ...shared.PayloadOption) error {
 	if client != nil {
+		payload := shared.NewPayload(opts...)
 		return client.sendMessage(&payload)
 	}
 	return fmt.Errorf("client not initialized")
@@ -63,8 +72,9 @@ func (c *Client) listenForIncomingMessages() {
 		if err == io.EOF {
 			//try to reconnect
 			log.Println("Connection is down, reconnecting...")
-			conn, err := redial(conf.Host, conf.Port)
-			if err == nil {
+			conn, reconnectErr := redial(conf.Host, conf.Port)
+			if reconnectErr == nil {
+				log.Println("Reconnected")
 				c.conn = conn
 				continue
 			}
@@ -83,7 +93,7 @@ func (c *Client) listenForIncomingMessages() {
 func (c *Client) handleMessage(message string) {
 	log.Println("Received message from server:", message)
 	// decode the payload
-	payload := shared.Payload{}
+	payload := shared.NewPayload()
 	err := shared.DecodePayload([]byte(message), &payload)
 	if err != nil {
 		log.Println("couldn't decode the payload:", err)
@@ -106,9 +116,8 @@ func (c *Client) executePlugin(payload *shared.Payload) {
 	// get the plugin
 	mPlugin, err := plugin.GetPluginManager().GetPlugin(payload.Command)
 	if err != nil {
-		log.Println("command/plugin not found")
-		payload.Error = fmt.Sprintf("Client handler for command %s not found!", payload.Command)
-		payload.Success = false
+		log.Println("command/plugin not found:", payload.Command)
+		payload.SetError(fmt.Errorf("client handler for command %s not found", payload.Command))
 		c.sendMessage(payload)
 		return
 	}
@@ -116,13 +125,12 @@ func (c *Client) executePlugin(payload *shared.Payload) {
 	switch mPlugin.GetMetadata().Type {
 	case plugin.PluginTypeClientServer:
 		// execute the plugin
-		response, err := mPlugin.Execute(payload.Data)
-		if err != nil {
-			log.Println("Plugin execution returned error:", err)
-			payload.Error = err.Error()
-			payload.Success = false
+		response, pluginErr := mPlugin.Execute(payload.Data)
+		if pluginErr != nil {
+			log.Println("Plugin execution returned error:", pluginErr)
+			payload.SetError(pluginErr)
 			c.sendMessage(payload)
-			return
+			break
 		}
 
 		payload.Data = response
@@ -130,14 +138,12 @@ func (c *Client) executePlugin(payload *shared.Payload) {
 		c.sendMessage(payload)
 		break
 	case plugin.PluginTypeClientOnly:
-		payload.Error = fmt.Sprintf("Plugin cannot handle the command %s.", payload.Command)
-		payload.Success = false
+		payload.SetError(fmt.Errorf("plugin cannot handle the command %s", payload.Command))
 		c.sendMessage(payload)
 		break
 	default:
 		log.Println("unsupported plugin type:", mPlugin.GetMetadata().Type)
-		payload.Error = fmt.Sprintf("Client handler for command %s not found!", payload.Command)
-		payload.Success = false
+		payload.SetError(fmt.Errorf("unsupported plugin type:%s", mPlugin.GetMetadata().Type))
 		c.sendMessage(payload)
 	}
 }
